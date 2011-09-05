@@ -21,6 +21,7 @@ integers, arrays, etc.
 
 <pre>
 <code>
+
 <?xml version="1.0" encoding="UTF-8"?>
 <books type="array">
   <book>
@@ -87,6 +88,7 @@ integers, arrays, etc.
     <name>Book 1</name>
   </book>
 </books>
+
 </code>
 </pre>
 
@@ -105,30 +107,24 @@ associations in your model.  Following are is a sample model.
 
 @book.rb@
 <pre>
-<code>
-class Book < ActiveRecord::Base
+<code>class Book < ActiveRecord::Base
   has_many :chapters, :dependent => :destroy
-end
-</code>
+end</code>
 </pre>
 
 @chapter.rb@
 <pre>
-<code>
-class Chapter < ActiveRecord::Base
+<code>class Chapter < ActiveRecord::Base
   has_many :pages, :dependent => :destroy
   belongs_to :book
-end
-</code>
+end</code>
 </pre>
 
 @page.rb@
 <pre>
-<code>
-class Page < ActiveRecord::Base
+<code>class Page < ActiveRecord::Base
   belongs_to :chapter
-end
-</code>
+end</code>
 </pre>
 
 At this stage XML Active has been tested with a limited number of associations.  It is hoped in the future (and when I
@@ -140,14 +136,17 @@ Now to the meaty part, the examples.  XML Active currenly uses "Nokogiri":http:/
 you can provide either a @Nokogiri::XML::Element@ or raw XML.
 
 h3. New Functions
+
 XML Active extends the ActiveRecord class giving you the following functions:
 
 @many_from_xml(xml, options)@
-This function expects an XML document similar to the following with many records in it:
+Allows for the import of many records based on an XML document. This function expects an XML document similar
+to the following with many records in it:
 
 @books_changed.xml@
 <pre>
 <code>
+
 <?xml version="1.0" encoding="UTF-8"?>
 <books type="array">
   <book>
@@ -163,35 +162,35 @@ This function expects an XML document similar to the following with many records
     <name>Book 1</name>
   </book>
 </books>
+
 </code>
 </pre>
 
 Following is an example:
 <pre>
-<code>
-Book.many_from_xml File.open("books_changed.xml").read, [:update]
-</code>
+<code>Book.many_from_xml File.open("books_changed.xml").read, [:update]</code>
 </pre>
 
 @one_from_xml(xml, options)@
-This function expects an XML document similar to the following with many records in it:
+Allows for the import of one record based on an XML document. This function expects an XML document similar
+to the following with many records in it:
 
 @one_book_changed.xml@
 <pre>
 <code>
+
 <?xml version="1.0" encoding="UTF-8"?>
 <book>
   <id type="Integer">4</id>
   <name>Book 1</name>
 </book>
+
 </code>
 </pre>
 
 Following is an example:
 <pre>
-<code>
-Book.one_from_xml File.open("one_book_changed.xml").read, [:update]
-</code>
+<code>Book.one_from_xml File.open("one_book_changed.xml").read, [:update]</code>
 </pre>
 
 h3. Options
@@ -215,5 +214,3 @@ model, associations and the primary key.  This respects validation by using the 
 * *:sync*
 This is really the combination of :create, :update and :destroy. Using this option will cause XML Active to ignore
 :create, :update and :destroy options and will proceed to make your database records match those in the XML document.
-
-
