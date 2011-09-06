@@ -16,7 +16,6 @@ h3. XML Documents
 XML Active relies on the XML documents created by ActiveRecord in that it utilises the element attributes and document layout.  Following is a sample of an XML document. Note the @type@ attribute which helps to identify elements that are integers, arrays, etc.
 
 <pre>
-<?xml version="1.0" encoding="UTF-8"?>
 <books type="array">
   <book>
     <id type="Integer">4</id>
@@ -129,7 +128,6 @@ XML Active extends the ActiveRecord class giving you the following functions:
 Allows for the import of many records based on an XML document. This function expects an XML document similar to the following with many records in it:
 @books_changed.xml@
 <pre>
-<?xml version="1.0" encoding="UTF-8"?>
 <books type="array">
   <book>
     <id type="Integer">4</id>
@@ -156,7 +154,6 @@ Allows for the import of one record based on an XML document. This function expe
 
 @one_book_changed.xml@
 <pre>
-<?xml version="1.0" encoding="UTF-8"?>
 <book>
   <id type="Integer">4</id>
   <name>Book 1</name>
