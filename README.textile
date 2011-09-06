@@ -16,7 +16,6 @@ h3. XML Documents
 XML Active relies on the XML documents created by ActiveRecord in that it utilises the element attributes and document layout.  Following is a sample of an XML document. Note the @type@ attribute which helps to identify elements that are integers, arrays, etc.
 
 <pre>
-<code>
 <?xml version="1.0" encoding="UTF-8"?>
 <books type="array">
   <book>
@@ -96,24 +95,24 @@ In order to identify the relationships XML Active it relies on associations so y
 
 @book.rb@
 <pre>
-<code>class Book < ActiveRecord::Base
+class Book < ActiveRecord::Base
   has_many :chapters, :dependent => :destroy
-end</code>
+end
 </pre>
 
 @chapter.rb@
 <pre>
-<code>class Chapter < ActiveRecord::Base
+class Chapter < ActiveRecord::Base
   has_many :pages, :dependent => :destroy
   belongs_to :book
-end</code>
+end
 </pre>
 
 @page.rb@
 <pre>
-<code>class Page < ActiveRecord::Base
+class Page < ActiveRecord::Base
   belongs_to :chapter
-end</code>
+end
 </pre>
 
 At this stage XML Active has been tested with a limited number of associations.  It is hoped in the future that a more complete set of tests will exist.
@@ -130,7 +129,6 @@ XML Active extends the ActiveRecord class giving you the following functions:
 Allows for the import of many records based on an XML document. This function expects an XML document similar to the following with many records in it:
 @books_changed.xml@
 <pre>
-<code>
 <?xml version="1.0" encoding="UTF-8"?>
 <books type="array">
   <book>
@@ -146,12 +144,11 @@ Allows for the import of many records based on an XML document. This function ex
     <name>Book 1</name>
   </book>
 </books>
-</code>
 </pre>
 
 Following is an example:
 <pre>
-<code>Book.many_from_xml File.open("books_changed.xml").read, [:update]</code>
+Book.many_from_xml File.open("books_changed.xml").read, [:update]
 </pre>
 
 @one_from_xml(xml, options)@
@@ -159,18 +156,16 @@ Allows for the import of one record based on an XML document. This function expe
 
 @one_book_changed.xml@
 <pre>
-<code>
 <?xml version="1.0" encoding="UTF-8"?>
 <book>
   <id type="Integer">4</id>
   <name>Book 1</name>
 </book>
-</code>
 </pre>
 
 Following is an example:
 <pre>
-<code>Book.one_from_xml File.open("one_book_changed.xml").read, [:update]</code>
+Book.one_from_xml File.open("one_book_changed.xml").read, [:update]
 </pre>
 
 h3. Options
