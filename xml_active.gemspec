@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = XmlActive::VERSION
   s.authors     = ["Michael Harrison"]
   s.email       = ["michael@focalpause.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/michael-harrison/xml_active"
   s.summary     = "xml_active #{s.version}"
   s.description = %q{XML Active is an extension of ActiveRecord that provides features to synchronise an ActiveRecord Model with a supplied XML document}
 
