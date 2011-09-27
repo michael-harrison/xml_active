@@ -84,7 +84,7 @@ XML Active relies on the XML documents created by ActiveRecord in that it utilis
 
 === Database Schema
 
-XML Active will detect the primary key of the tables in your schema even if is a name other than @id@.  It will use the primary key to match records for update or deletion or creation when they don't exist.  Given this it's very important that the tables that you wish to synchronise have a primary key with auto increment.  The good news is by default Rails will create a primary key field called @id@ that is auto-increment.  At this time XML Active doesn't support compound primary keys.
+XML Active will detect the primary key of the tables in your schema even if is a name other than <b>id</b>.  It will use the primary key to match records for update or deletion or creation when they don't exist.  Given this it's very important that the tables that you wish to synchronise have a primary key with auto increment.  The good news is by default Rails will create a primary key field called <b>id</b> that is auto-increment.  At this time XML Active doesn't support compound primary keys.
 
 === The Model
 
@@ -110,7 +110,7 @@ At this stage XML Active has been tested with a limited number of associations. 
 
 == Examples
 
-Now to the meaty part, the examples.  XML Active currenly uses "Nokogiri":http://nokogiri.org/ to do its XML parsing so you can provide either a @Nokogiri::XML::Element@ or raw XML.
+Now to the meaty part, the examples.  XML Active currenly uses "Nokogiri"(http://nokogiri.org/) to do its XML parsing so you can provide either a <b>Nokogiri::XML::Element</b> or raw XML.
 
 === New Functions
 
@@ -154,11 +154,11 @@ Following is an example:
 
 You can combine any of the options (:create, :update or :destroy) and XML Active will only perform the actions provided in the options.  However if you use the :sync option then all other options are ignored.  Following are the current options:
 
-* @:update@ records in the database that match those in the provided XML document based on classes in the model, associations and the primary key.
+* <b>:update</b> records in the database that match those in the provided XML document based on classes in the model, associations and the primary key.
 
-* @:create@ records in the database that exist in the provided XML document but not in the database. Matching is based on classes in the model, associations and the primary key.
+* <b>:create</b> records in the database that exist in the provided XML document but not in the database. Matching is based on classes in the model, associations and the primary key.
 
-* @:destroy@ records in the database that don't exist in the provided XML document. Matching is based on classes in the model, associations and the primary key.  This respects validation by using the ActiveRecord destroy rather than delete.
+* <b>:destroy</b> records in the database that don't exist in the provided XML document. Matching is based on classes in the model, associations and the primary key.  This respects validation by using the ActiveRecord destroy rather than delete.
 
-* @:sync@ is really the combination of :create, :update and :destroy. Using this option will cause XML Active to ignore :create, :update and :destroy options and will proceed to make your database records match those in the XML document.
+* <b>:sync</b> is really the combination of :create, :update and :destroy. Using this option will cause XML Active to ignore :create, :update and :destroy options and will proceed to make your database records match those in the XML document.
 
