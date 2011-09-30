@@ -162,3 +162,5 @@ You can combine any of the options (:create, :update or :destroy) and XML Active
 
 * <b>:sync</b> is really the combination of :create, :update and :destroy. Using this option will cause XML Active to ignore :create, :update and :destroy options and will proceed to make your database records match those in the XML document.
 
+=== Testing
+In order to perform testing I created an application specifically for the task.  The resulting application is stored on GitHub: https://github.com/michael-harrison/xml_active_bubble
