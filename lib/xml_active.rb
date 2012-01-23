@@ -11,7 +11,7 @@ module XmlActive
     end while self.class.exists?(name => self[name])
   end
 
-  VALID_FROM_XML_OPTIONS = [:sync, :create, :update, :destroy]
+  VALID_FROM_XML_OPTIONS = [:sync, :create, :update, :destroy, :build]
 
   module ClassMethods
     def many_from_xml(xml, options = [])
@@ -78,7 +78,7 @@ module XmlActive
           if self.xml_node_is_association(node)
             # Association
             association = self.reflect_on_association(sym)
-            if (association)
+            if association && association.collection?
               # association exists, lets process it
               klass = association.klass
               child_ids = []
@@ -92,6 +92,10 @@ module XmlActive
               if (pk_value != 0 and child_ids.length > 0 and (options.include?(:destroy) or options.include?(:sync)))
                 klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{association.primary_key_name} = ?", child_ids.collect, pk_value]
               end
+            elsif association && ! association.collection?
+              raise ArgumentError.new("Can't destroy, update or sync :has_one associations") if [:destroy, :update, :sync].any? {|opt| options.include?(opt) }
+
+              ar.__send__("#{sym}=", association.klass.one_from_xml(node, options))
             end
           else
             # Attribute
@@ -115,19 +119,21 @@ module XmlActive
     end
 
     def xml_node_matches_single_class(xml_node)
-      self.name.downcase.eql?(xml_node.name.downcase)
+      self.name.underscore.eql?(xml_node.name.underscore)
     end
 
     def xml_node_matches_many_of_class(xml_node)
-      self.name.pluralize.downcase.eql?(xml_node.name.downcase)
+      self.name.pluralize.underscore.eql?(xml_node.name.underscore)
     end
 
     def xml_node_is_association(xml_node)
-      attr = xml_node.attributes["type"]
-      if (attr)
-        attr.value == "array"
+      attr 
+      if (attr = xml_node.attributes["type"]) && attr == 'array'
+        # has_many
+        true
       else
-        false
+        # Maybe has one?
+        reflect_on_association(xml_node.name.underscore.to_sym).present?
       end
     end
   end
