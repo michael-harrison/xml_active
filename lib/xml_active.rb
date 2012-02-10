@@ -115,11 +115,11 @@ module XmlActive
     end
 
     def xml_node_matches_single_class(xml_node)
-      self.name.downcase.eql?(xml_node.name.downcase)
+      self.name.underscore.eql?(xml_node.name.underscore)
     end
 
     def xml_node_matches_many_of_class(xml_node)
-      self.name.pluralize.downcase.eql?(xml_node.name.downcase)
+      self.name.pluralize.underscore.eql?(xml_node.name.underscore)
     end
 
     def xml_node_is_association(xml_node)
