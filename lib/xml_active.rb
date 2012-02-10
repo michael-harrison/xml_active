@@ -103,7 +103,11 @@ module XmlActive
             end
           else
             # Attribute
-            ar[sym] = node.text
+            if node.attributes['nil'].try(:value)
+              ar[sym] = nil
+            else
+              ar[sym] = node.text
+            end
           end
         end
 
