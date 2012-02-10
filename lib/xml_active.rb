@@ -80,10 +80,14 @@ module XmlActive
             association = self.reflect_on_association(sym)
             if association && association.collection?
               # association exists, lets process it
-              klass = association.klass
               child_ids = []
               node.element_children.each do |single_obj|
                 child_ids[child_ids.length] = single_obj.xpath(self.primary_key.to_s).text
+                if single_obj.attributes['type'].blank?
+                  klass = association.klass
+                else
+                  klass = Kernel.const_get(single_obj.attributes['type'].value)
+                end
                 new_record = klass.one_from_xml(single_obj, options)
                 if (new_record != nil)
                   ar.__send__(sym) << new_record
@@ -119,7 +123,11 @@ module XmlActive
     end
 
     def xml_node_matches_single_class(xml_node)
-      self.name.underscore.eql?(xml_node.name.underscore)
+      if xml_node.attributes['type'].blank?
+        self.name.underscore.eql?(xml_node.name.underscore)
+      else
+        self.name.underscore.eql?(xml_node.attributes['type'].value.underscore)
+      end
     end
 
     def xml_node_matches_many_of_class(xml_node)
