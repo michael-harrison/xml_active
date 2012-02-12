@@ -1,8 +1,9 @@
 require "xml_active/version"
 
 module XmlActive
-  def self.included(base)
-    base.extend ClassMethods
+  extend ActiveSupport::Concern
+
+  included do
   end
 
   def ensure_unique(name)
@@ -151,6 +152,4 @@ module XmlActive
   end
 end
 
-class ActiveRecord::Base
-  include XmlActive
-end
+ActiveRecord::Base.send :include, XmlActive::ClassMethods
