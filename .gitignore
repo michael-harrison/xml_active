@@ -1,6 +1,7 @@
 *.gem
 pkg/*
 *.log
+*.sqlite3
 
 ## MAC OS
 .DS_Store
