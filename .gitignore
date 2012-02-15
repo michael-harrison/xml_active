@@ -1,5 +1,4 @@
 *.gem
-Gemfile.lock
 pkg/*
 
 ## MAC OS

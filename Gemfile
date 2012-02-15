@@ -4,7 +4,6 @@ source "http://rubygems.org"
 gemspec
 
 gem 'nokogiri'
-gem 'growl_notify'
 gem 'rails'
 gem 'rdoc'
 gem 'rspec'
