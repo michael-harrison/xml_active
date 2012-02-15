@@ -1,5 +1,6 @@
 *.gem
 pkg/*
+*.log
 
 ## MAC OS
 .DS_Store
@@ -28,4 +29,3 @@ pkg
 tmp
 .bundle
 doc
-
