@@ -1,37 +1,50 @@
 require 'spec_helper'
 
 describe XmlActive do
-  shared_context "xml_elements" do |xml_element|
-    it "can be imported" do
-      pending "spec it"
-    end
-
-    it "can contain has_many associations" do
-      pending "spec it"
-    end
-
-    it "can contain has_one associations" do
-      pending "spec it"
-    end
-
-    it "can contain belongs_to associations" do
-      pending "spec it"
-    end
-
-    it "can contains polymorphic belongs_to associations" do
-      pending "spec it"
-    end
-
-    it "can differeniate between nil and blank" do
-      pending "spec it"
-    end
+  it "should import one record" do
+    book = FactoryGirl.create :book
+    should be_imported pending "from_xml method"
   end
 
-  context "with only one record" do
-    include_context "xml_elements"
+  it "should import many records" do
+    pending "from_xml method"
   end
 
-  context "with many records" do
-    include_context "xml_elements"
+  it "should import one record and its has_many records" do
+    pending "from_xml method"
+  end
+
+  it "should import many records and all their has_many records" do
+    pending "from_xml method"
+  end
+
+  it "should import one record and its has_one record" do
+    pending "from_xml method"
+  end
+
+  it "should import many records and their has_one record" do
+    pending "from_xml method"
+  end
+
+  it "should import one record and its belongs_to record" do
+    pending "from_xml method"
+  end
+
+  it "should import many records and their belongs_to records" do
+    pending "from_xml method"
+  end
+
+  RSpec::Matchers.define :be_imported do |expected|
+    match do
+      expected_xml = expected.to_xml
+      expected_class = Array.wrap(expected).class
+      
+      Array.wrap(expected).each { |one_of_expected| one_of_expected.destroy }
+
+      actual_xml = expected_class.from_xml(expected_xml)
+      actual_xml == expected_xml
+    end
+
+    diffable
   end
 end
