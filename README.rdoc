@@ -162,5 +162,47 @@ You can combine any of the options (:create, :update or :destroy) and XML Active
 
 * <b>:sync</b> is really the combination of :create, :update and :destroy. Using this option will cause XML Active to ignore :create, :update and :destroy options and will proceed to make your database records match those in the XML document.
 
+=== One to One Associations
+XML Active supports has_one association with all options and following arr the behaviours of XML Active with each option:
+
+<b>:update</b>
+
+* <i>Record exists in XML but not in DB</i>: No Action
+* <i>Record exists in DB but not in XML</i>: No Action
+* <i>Record exists in XML and in DB</i>: DB record is updated if identifying features (eg id) match
+
+<b>:create</b>
+
+* <i>Record exists in XML but not in DB</i>: A new record in the DB is created
+* <i>Record exists in DB but not in XML</i>: No Action
+* <i>Record exists in XML and in DB</i>: No Action
+
+<b>:destroy</b>
+
+* <i>Record exists in XML but not in DB</i>: No Action
+* <i>Record exists in DB but not in XML</i>: The DB Record is Destroyed
+* <i>Record exists in XML and in DB</i>: DB record is destroyed if identifying features (eg id) don't match
+
+<b>:sync</b>
+
+* <i>Record exists in XML but not in DB</i>: A new record in the DB is created
+* <i>Record exists in DB but not in XML</i>: The DB Record is Destroyed
+* <i>Record exists in XML and in DB</i>: DB record is replace if identifying features (eg id) don't match but if they do then the DB record is updated
+
+=== Versions
+
+* 0.0.2 First Release
+* 0.0.3 Addition of support for One to One associations and various bug fixes
+
+=== Future Features
+
+* <b>Dry Run</b> allow xml_active to do a dry run and report potentail changes rather than making them
+* <b>Events</b> Event hooks in key locations
+* <b>Selective Upates</b> Specify a set of active record objects to effect and leave all the rest alone
+* <b>Many to Many</b> Tested support for has_and_belongs_to_many
+* <b>Polymorphic Associations</b> Tested support these associations
+
 === Testing
 In order to perform testing I created an application specifically for the task.  The resulting application is stored on GitHub: https://github.com/michael-harrison/xml_active_bubble
+
+This testing will be incorporated in the primary repo in the next major release
