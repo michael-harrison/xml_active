@@ -29,16 +29,28 @@ module XmlActive
         if current_node.attributes['type'].try(:value) == "array"
           current_node.element_children.each do |node|
             record = self.one_from_xml(node, options)
-            ids[ids.length] = record[primary_key.to_sym]
-            records[records.length] = record
+            if record
+              ids[ids.length] = record[primary_key.to_sym]
+              records[records.length] = record
+            end
           end
         else
           records[records.length] = self.one_from_xml current_node
         end
 
-        if ids.length > 0 and (options.include?(:destroy) or options.include?(:sync))
-          self.destroy_all [self.primary_key.to_s + " not in (?)", ids.collect]
+
+        if options.include?(:sync)
+          if ids.length > 0
+            self.destroy_all [self.primary_key.to_s + " not in (?)", ids.collect]
+          end
+        elsif options.include?(:destroy)
+          if ids.length > 0
+            self.destroy_all [self.primary_key.to_s + " not in (?)", ids.collect]
+          else
+            self.destroy_all
+          end
         end
+
       elsif self.name.underscore.equ current_node.name.underscore
         raise "The supplied XML (#{current_node.name}) is a single instance of '#{self.name}'. Please use one_from_xml"
       else
@@ -106,28 +118,40 @@ module XmlActive
                   end
                 end
 
-                if (pk_value != 0 and child_ids.length > 0 and (options.include?(:destroy) or options.include?(:sync)))
-                  klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{association.primary_key_name} = ?", child_ids.collect, pk_value]
+                if pk_value != 0
+                  if options.include?(:sync)
+                    if child_ids.length > 0
+                      klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{association.primary_key_name} = ?", child_ids.collect, pk_value]
+                    end
+                  elsif options.include?(:destroy)
+                    if child_ids.length > 0
+                      klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{association.primary_key_name} = ?", child_ids.collect, pk_value]
+                    else
+                      klass.destroy_all
+                    end
+                  end
                 end
               end
 
             when association.macro == :has_one
               single_objects = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{pk_value}]/#{association.name}")
+              klass = association.klass
+              record = klass.where(association.primary_key_name => pk_value).all
               if single_objects.count == 1
                 # Check to see if the already record exists
-                klass = association.klass
-                record = klass.where association.primary_key_name => pk_value
-                if record.count > 0
+                if record.count == 1
                   db_pk_value = record[0][klass.primary_key]
-                  xml_pk_value = Integer(node.element_children.xpath("//#{node_name}/#{klass.primary_key}").text)
+                  xml_pk_value = Integer(single_objects[0].element_children.xpath("//#{self.name.underscore}/#{klass.primary_key}").text)
 
                   if db_pk_value != xml_pk_value
                     # Different record in xml
                     if options.include?(:sync) or options.include?(:destroy)
                       # Delete the one in the database
-                      records[0].distroy!
+                      klass.destroy(record[0][klass.primary_key])
                     end
                   end
+                elsif record.count > 1
+                  raise "Too many records for one to one association in the database. Found #{record.count} records of '#{association.name}' for association with '#{self.name}'"
                 end
 
                 if options.include?(:create) or options.include?(:update) or options.include?(:sync)
@@ -138,7 +162,14 @@ module XmlActive
                   end
                 end
               elsif single_objects.count > 1
-                raise "Too many records for one to one association. Found #{single_objects.count} records of '#{association.name}' for association with '#{self.name}'"
+                # There are more than one associations
+                raise "Too many records for one to one association in the provided XML. Found #{single_objects.count} records of '#{association.name}' for association with '#{self.name}'"
+              else
+                # There are no records in the XML
+                if record.count > 0 and options.include?(:sync) or options.include?(:destroy)
+                  # Found some in the database: destroy then
+                  klass.destroy_all("#{association.primary_key_name} = #{pk_value}")
+                end
               end
 
             when association.macro == :belongs_to
