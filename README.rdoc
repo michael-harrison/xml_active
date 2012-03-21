@@ -187,7 +187,7 @@ XML Active supports has_one association with all options and following arr the b
 
 * <i>Record exists in XML but not in DB</i>: A new record in the DB is created
 * <i>Record exists in DB but not in XML</i>: The DB Record is Destroyed
-* <i>Record exists in XML and in DB</i>: DB record is replace if identifying features (eg id) don't match but if they do then the DB record is updated
+* <i>Record exists in XML and in DB</i>: DB record is replaced if identifying features (eg id) don't match but if they do then the DB record is updated
 
 === Versions
 
@@ -200,7 +200,7 @@ XML Active supports has_one association with all options and following arr the b
 * <b>Events</b> Event hooks in key locations
 * <b>Selective Upates</b> Specify a set of active record objects to effect and leave all the rest alone
 * <b>Many to Many</b> Tested support for has_and_belongs_to_many
-* <b>Polymorphic Associations</b> Tested support these associations
+* <b>Polymorphic Associations</b> Tested support for these associations
 
 === Testing
 In order to perform testing I created an application specifically for the task.  The resulting application is stored on GitHub: https://github.com/michael-harrison/xml_active_bubble
