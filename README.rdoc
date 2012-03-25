@@ -205,4 +205,6 @@ XML Active supports has_one association with all options and following arr the b
 === Testing
 In order to perform testing I created an application specifically for the task.  The resulting application is stored on GitHub: https://github.com/michael-harrison/xml_active_bubble
 
+At this stage xml_active has been tested with Rails 3.0.7, 3.1.0 and 3.2.2
+
 This testing will be incorporated in the primary repo in the next major release
