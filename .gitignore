@@ -1,6 +1,7 @@
 *.gem
-Gemfile.lock
 pkg/*
+*.log
+*.sqlite3
 
 ## MAC OS
 .DS_Store
@@ -29,4 +30,3 @@ pkg
 tmp
 .bundle
 doc
-
