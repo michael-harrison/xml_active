@@ -97,6 +97,15 @@ module XmlActive
 
         # Check through associations and apply sync appropriately
         self.reflect_on_all_associations.each do |association|
+          if ActiveRecord::Reflection::AssociationReflection.method_defined? :foreign_key
+            # Support for Rails 3.1 and later
+            foreign_key = association.foreign_key
+          elsif ActiveRecord::Reflection::AssociationReflection.method_defined? :primary_key_name
+            # Support for Rails earlier than 3.1
+            foreign_key = association.primary_key_name
+          else
+            raise "Unsupported version of ActiveRecord. Unable to identify the foreign key."
+          end
           case
             when association.macro == :has_many, association.macro == :has_and_belongs_to_many
               # Check to see if xml contains elements for the association
@@ -121,11 +130,11 @@ module XmlActive
                 if pk_value != 0
                   if options.include?(:sync)
                     if child_ids.length > 0
-                      klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{association.primary_key_name} = ?", child_ids.collect, pk_value]
+                      klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{foreign_key} = ?", child_ids.collect, pk_value]
                     end
                   elsif options.include?(:destroy)
                     if child_ids.length > 0
-                      klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{association.primary_key_name} = ?", child_ids.collect, pk_value]
+                      klass.destroy_all [klass.primary_key.to_s + " not in (?) and #{foreign_key} = ?", child_ids.collect, pk_value]
                     else
                       klass.destroy_all
                     end
@@ -136,7 +145,7 @@ module XmlActive
             when association.macro == :has_one
               single_objects = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{pk_value}]/#{association.name}")
               klass = association.klass
-              record = klass.where(association.primary_key_name => pk_value).all
+              record = klass.where(foreign_key => pk_value).all
               if single_objects.count == 1
                 # Check to see if the already record exists
                 if record.count == 1
@@ -157,7 +166,7 @@ module XmlActive
                 if options.include?(:create) or options.include?(:update) or options.include?(:sync)
                   new_record = klass.one_from_xml(single_objects[0], options)
                   if new_record != nil
-                    new_record[association.primary_key_name.to_sym] = ar[self.primary_key]
+                    new_record[foreign_key.to_sym] = ar[self.primary_key]
                     new_record.save!
                   end
                 end
@@ -168,7 +177,7 @@ module XmlActive
                 # There are no records in the XML
                 if record.count > 0 and options.include?(:sync) or options.include?(:destroy)
                   # Found some in the database: destroy then
-                  klass.destroy_all("#{association.primary_key_name} = #{pk_value}")
+                  klass.destroy_all("#{foreign_key} = #{pk_value}")
                 end
               end
 
