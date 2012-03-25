@@ -192,7 +192,7 @@ XML Active supports has_one association with all options and following arr the b
 === Versions
 
 * 0.0.2 First Release
-* 0.0.3 Addition of support for One to One associations and various bug fixes
+* 0.0.3 Addition of support for One to One associations, various bug fixes and testing in Rails 3.0.7, 3.1.0 and 3.2.2
 
 === Future Features
 
