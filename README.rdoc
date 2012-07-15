@@ -263,6 +263,7 @@ XML Active supports has_one association with all options and following arr the b
 * 0.0.2 First Release
 * 0.0.3 Addition of support for One to One associations, various bug fixes and testing in Rails 3.0.7, 3.1.0 and 3.2.2
 * 0.0.4 Dropped support for 3.0.x and continued testing on 3.1.x and 3.2.x.  Added support for Microsoft Office style XML
+* 0.0.5 Resolved issue where the parent record in a one to many relationship had not been saved causing validation errors when saving child records
 
 === Future Features
 
