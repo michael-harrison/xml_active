@@ -110,6 +110,21 @@ module XmlActive
 
 
         unless active_record.nil?
+          # Process the attributes
+          if options.include? :update or options.include? :sync or options.include? :create
+            assign_attributes_from current_node, :to => active_record
+          end
+
+          # Save the record
+          if options.include? :sync
+            # Doing complete synchronisation with XML
+            active_record.save
+          elsif options.include?(:create) and active_record.new_record?
+            active_record.save
+          elsif options.include?(:update) and not active_record.new_record?
+            active_record.save
+          end
+
           # Check through associations and apply sync appropriately
           self.reflect_on_all_associations.each do |association|
             foreign_key = foreign_key_from(association)
@@ -183,21 +198,6 @@ module XmlActive
               else
                 raise "unsupported association #{association.macro} for #{association.name  } on #{self.name}"
             end
-          end
-
-          # Process the attributes
-          if options.include? :update or options.include? :sync or options.include? :create
-            assign_attributes_from current_node, :to => active_record
-          end
-
-          # Save the record
-          if options.include? :sync
-            # Doing complete synchronisation with XML
-            active_record.save
-          elsif options.include?(:create) and active_record.new_record?
-            active_record.save
-          elsif options.include?(:update) and not active_record.new_record?
-            active_record.save
           end
         end
 
