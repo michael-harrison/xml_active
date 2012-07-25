@@ -11,90 +11,12 @@ module XmlActive
     end while self.class.exists?(name => self[name])
   end
 
-  VALID_FROM_XML_OPTIONS = [:sync, :create, :update, :destroy]
+  VALID_FROM_XML_OPTIONS = [:sync, :create, :update, :destroy, :fail_on_invalid]
 
   module ClassMethods
     def many_from_xml(source_xml, options = [])
       @data_active_options = options
       many_from root_node_in source_xml
-    end
-
-    def many_from(current_node)
-      case
-        when self.name.pluralize.underscore.eql?(current_node.name.underscore)
-          many_from_rails_xml current_node
-
-        when (current_node.name.eql?('dataroot') \
-          and current_node.namespace_definitions.map { |ns| ns.href }.include?('urn:schemas-microsoft-com:officedata'))
-          # Identified as data generated from Microsoft Access
-          many_from_ms_xml current_node
-
-        when self.name.underscore.eql?(current_node.name.underscore)
-          raise "The supplied XML (#{current_node.name}) is a single instance of '#{self.name}'. Please use one_from_xml"
-
-        else
-          raise "The supplied XML (#{current_node.name}) cannot be mapped to this class (#{self.name})"
-
-      end
-    end
-
-    def many_from_ms_xml(current_node)
-      records = []
-      recorded_ids = []
-
-      current_node.element_children.each do |node|
-        if self.name.underscore.eql?(node.name.underscore)
-          record = self.one_from_xml(node, @data_active_options)
-          if record
-            recorded_ids << record[primary_key.to_sym]
-            records << record
-          end
-        end
-      end
-
-      remove_records_not_in recorded_ids
-
-      records
-    end
-
-    def many_from_rails_xml(current_node)
-      records = []
-      recorded_ids = []
-
-      current_node.element_children.each do |node|
-        record = self.one_from_xml(node, @data_active_options)
-        if record
-          recorded_ids << record[primary_key.to_sym]
-          records << record
-        end
-      end
-
-      remove_records_not_in recorded_ids
-
-      records
-    end
-
-    def remove_records_not_in(recorded_ids)
-      if @data_active_options.include?(:sync)
-        if recorded_ids.length > 0
-          self.destroy_all [self.primary_key.to_s + " not in (?)", recorded_ids.collect]
-        end
-      elsif @data_active_options.include?(:destroy)
-        if recorded_ids.length > 0
-          self.destroy_all [self.primary_key.to_s + " not in (?)", recorded_ids.collect]
-        else
-          self.destroy_all
-        end
-      end
-    end
-
-    def root_node_in(source_xml)
-      if source_xml.is_a?(String)
-        doc = Nokogiri::XML(source_xml)
-        doc.children.first
-      else
-        source_xml
-      end
     end
 
     def one_from_xml(source_xml, options = [])
@@ -108,21 +30,14 @@ module XmlActive
 
         active_record = find_record_based_on(pk_node)
 
-
         unless active_record.nil?
           # Process the attributes
           if options.include? :update or options.include? :sync or options.include? :create
             assign_attributes_from current_node, :to => active_record
-          end
-
-          # Save the record
-          if options.include? :sync
-            # Doing complete synchronisation with XML
-            active_record.save
-          elsif options.include?(:create) and active_record.new_record?
-            active_record.save
-          elsif options.include?(:update) and not active_record.new_record?
-            active_record.save
+            if options.include? :fail_on_invalid and !active_record.valid?
+              messages = active_record.errors.messages.map {|attribute, messages| "#{attribute} #{messages.map{|message| message }.join(', ')}"}.join(', ')
+              raise "Found an invalid #{active_record.class.name} with the following errors: #{messages}. Source: #{current_node.to_s}"
+            end
           end
 
           # Check through associations and apply sync appropriately
@@ -199,6 +114,16 @@ module XmlActive
                 raise "unsupported association #{association.macro} for #{association.name  } on #{self.name}"
             end
           end
+
+          # Save the record
+          if options.include? :sync
+            # Doing complete synchronisation with XML
+            active_record.save
+          elsif options.include?(:create) and active_record.new_record?
+            active_record.save
+          elsif options.include?(:update) and not active_record.new_record?
+            active_record.save
+          end
         end
 
         active_record
@@ -207,70 +132,12 @@ module XmlActive
       end
     end
 
-    def foreign_key_from(association)
-      if ActiveRecord::Reflection::AssociationReflection.method_defined? :foreign_key
-        # Support for Rails 3.1 and later
-        foreign_key = association.foreign_key
-      elsif ActiveRecord::Reflection::AssociationReflection.method_defined? :primary_key_name
-        # Support for Rails earlier than 3.1
-        foreign_key = association.primary_key_name
+    private
+    def xml_node_matches_class(xml_node)
+      if xml_node.attributes['type'].blank?
+        xml_node.name.underscore == self.name.underscore
       else
-        raise "Unsupported version of ActiveRecord. Unable to identify the foreign key."
-      end
-      foreign_key
-    end
-
-    def instances_for(association, options)
-      current_node = options[:from]
-      active_record = options[:for]
-
-      # Attempt to find instances which are in the following format
-      # <books>
-      #   <book>
-      #     ...
-      #   </book>
-      #   <book>
-      #     ...
-      #   </book>
-      # </books>
-      if active_record.new_record?
-        results = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{current_node.xpath(self.primary_key.to_s).text}]/#{association.name}")
-      else
-        results = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{active_record.attributes[self.primary_key.to_s]}]/#{association.name}")
-      end
-
-
-      if results.count.eql? 0
-        # Attempt to find instances which are in the following format
-        # <book>
-        #   ...
-        # </book>
-        if active_record.new_record?
-          results = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{current_node.xpath(self.primary_key.to_s).text}]/#{association.name.to_s.singularize}")
-        else
-          results = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{active_record.attributes[self.primary_key.to_s]}]/#{association.name.to_s.singularize}")
-        end
-      else
-        results = results.first.element_children
-      end
-
-      results
-    end
-
-    def assign_attributes_from(current_node, options)
-      record = options[:to]
-
-      record.attributes.each do |name, value|
-        attribute_nodes = current_node.xpath name.to_s
-        if attribute_nodes.count == 1
-          if attribute_nodes[0].attributes['nil'].try(:value)
-            record[name] = nil
-          else
-            record[name] = attribute_nodes[0].text
-          end
-        elsif attribute_nodes.count > 1
-          raise "Found duplicate elements in xml for active record attribute '#{name}'"
-        end
+        xml_node.attributes['type'].value.underscore == self.name.underscore
       end
     end
 
@@ -294,11 +161,148 @@ module XmlActive
       ar
     end
 
-    def xml_node_matches_class(xml_node)
-      if xml_node.attributes['type'].blank?
-        xml_node.name.underscore == self.name.underscore
+    def assign_attributes_from(current_node, options)
+      record = options[:to]
+
+      record.attributes.each do |name, value|
+        attribute_nodes = current_node.xpath name.to_s
+        if attribute_nodes.count == 1
+          if attribute_nodes[0].attributes['nil'].try(:value)
+            record[name] = nil
+          else
+            record[name] = attribute_nodes[0].text
+          end
+        elsif attribute_nodes.count > 1
+          raise "Found duplicate elements in xml for active record attribute '#{name}'"
+        end
+      end
+    end
+
+    def instances_for(association, options)
+      current_node = options[:from]
+      active_record = options[:for]
+
+      # Attempt to find instances which are in the following format
+      # <books>
+      #   <book>
+      #     ...
+      #   </book>
+      #   <book>
+      #     ...
+      #   </book>
+      # </books>
+      if active_record.new_record?
+        results = current_node.xpath("#{association.name}")
       else
-        xml_node.attributes['type'].value.underscore == self.name.underscore
+        results = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{active_record.attributes[self.primary_key.to_s]}]/#{association.name}")
+      end
+
+
+      if results.count.eql? 0
+        # Attempt to find instances which are in the following format
+        # <book>
+        #   ...
+        # </book>
+        if active_record.new_record?
+          results = current_node.xpath("#{association.name.to_s.singularize}")
+        else
+          results = current_node.xpath("//#{self.name.underscore}[#{self.primary_key}=#{active_record.attributes[self.primary_key.to_s]}]/#{association.name.to_s.singularize}")
+        end
+      else
+        results = results.first.element_children
+      end
+
+      results
+    end
+
+    def foreign_key_from(association)
+      if ActiveRecord::Reflection::AssociationReflection.method_defined? :foreign_key
+        # Support for Rails 3.1 and later
+        foreign_key = association.foreign_key
+      elsif ActiveRecord::Reflection::AssociationReflection.method_defined? :primary_key_name
+        # Support for Rails earlier than 3.1
+        foreign_key = association.primary_key_name
+      else
+        raise "Unsupported version of ActiveRecord. Unable to identify the foreign key."
+      end
+      foreign_key
+    end
+
+    def root_node_in(source_xml)
+      if source_xml.is_a?(String)
+        doc = Nokogiri::XML(source_xml)
+        doc.children.first
+      else
+        source_xml
+      end
+    end
+
+    def remove_records_not_in(recorded_ids)
+      if @data_active_options.include?(:sync)
+        if recorded_ids.length > 0
+          self.destroy_all [self.primary_key.to_s + " not in (?)", recorded_ids.collect]
+        end
+      elsif @data_active_options.include?(:destroy)
+        if recorded_ids.length > 0
+          self.destroy_all [self.primary_key.to_s + " not in (?)", recorded_ids.collect]
+        else
+          self.destroy_all
+        end
+      end
+    end
+
+    def many_from_rails_xml(current_node)
+      records = []
+      recorded_ids = []
+
+      current_node.element_children.each do |node|
+        record = self.one_from_xml(node, @data_active_options)
+        if record
+          recorded_ids << record[primary_key.to_sym]
+          records << record
+        end
+      end
+
+      remove_records_not_in recorded_ids
+
+      records
+    end
+
+    def many_from_ms_xml(current_node)
+      records = []
+      recorded_ids = []
+
+      current_node.element_children.each do |node|
+        if self.name.underscore.eql?(node.name.underscore)
+          record = self.one_from_xml(node, @data_active_options)
+          if record
+            recorded_ids << record[primary_key.to_sym]
+            records << record
+          end
+        end
+      end
+
+      remove_records_not_in recorded_ids
+
+      records
+    end
+
+    def many_from(current_node)
+      case
+        when self.name.pluralize.underscore.eql?(current_node.name.underscore)
+          many_from_rails_xml current_node
+
+        when (current_node.name.eql?('dataroot') \
+          and current_node.namespace_definitions.map { |ns| ns.href }.include?('urn:schemas-microsoft-com:officedata'))
+          # Identified as data generated from Microsoft Access
+          many_from_ms_xml current_node
+
+        when self.name.underscore.eql?(current_node.name.underscore)
+          raise "The supplied XML (#{current_node.name}) is a single instance of '#{self.name}'. Please use one_from_xml"
+
+        else
+          raise "The supplied XML (#{current_node.name}) cannot be mapped to this class (#{self.name})"
+
       end
     end
   end
